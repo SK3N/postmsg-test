@@ -25,6 +25,11 @@
     <label for="tracking">トラッキングコード：</label>
     <input type="text" id="tracking" name="tracking" placeholder="未入力" />
 
+    <form>
+      <label for="gclid">GCLID:</label>
+      <input type="text" name="gclid" placeholder="自動入力されます">
+    </form>
+
     <script>
       window.addEventListener('message', function (event) {
         console.log("受信：", event.origin, event.data);
