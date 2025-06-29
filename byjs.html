@@ -22,7 +22,7 @@
         const params = new URLSearchParams(window.location.search);
         const gclid = params.get('gad_campaignid'); // パラメータ名に注意！
 
-        fetch('children.html')
+        fetch('https://potsmsg-test.netlify.app/children-byjs.html')
           .then(res => res.text())
           .then(html => {
             document.getElementById('form-container').innerHTML = html;
