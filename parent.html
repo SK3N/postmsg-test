@@ -19,20 +19,25 @@
       <iframe id="child-iframe" src="https://potsmsg-test.netlify.app/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe>
 
       <script>
-        window.addEventListener('DOMContentLoaded', () => {
-          const iframe = document.getElementById('child-iframe');
+        // クエリ文字列をオブジェクトに変換する関数
+        function getQueryParams() {
+          const params = {};
+          const searchParams = new URLSearchParams(window.location.search);
+          for (const [key, value] of searchParams.entries()) {
+            params[key] = value;
+          }
+          return params;
+        }
 
-          // 送るデータ
-          const trackingData = {
-            gclid: 'EXAMPLE-GCLID',
-            traffic_source: 'google',
-          };
+        // iframe に postMessage を送る関数
+        function sendToIframe() {
+          const iframe = document.querySelector('iframe');
+          const trackingData = getQueryParams();
+          iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
+        }
 
-          // iframeが読み込まれてから postMessage 送信
-          iframe.onload = () => {
-            iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
-          };
-        });
+        // ページ読み込み後、自動で送信
+        window.addEventListener('DOMContentLoaded', sendToIframe);
       </script>
     </div>
   </body>

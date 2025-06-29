@@ -26,17 +26,12 @@
     <input type="text" id="tracking" name="tracking" placeholder="未入力" />
 
     <script>
-      window.addEventListener("message", (event) => {
-        if (event.origin !== "https://sk3n.github.io") return;
+      window.addEventListener('message', function (event) {
+        if (event.origin !== "https://sk3n.github.io") return; // origin チェック
 
-        // 受け取ったデータの表示
-        console.log("親から受信:", event.data);
-
-        // 例：hidden inputに代入（存在する場合）
+        const data = event.data;
         const input = document.getElementById("tracking");
-        if (input) {
-          input.value = JSON.stringify(event.data);
-        }
+        input.value = JSON.stringify(data);
       });
     </script>
   </body>
