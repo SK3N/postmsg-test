@@ -29,16 +29,15 @@
           return params;
         }
 
-        // iframe に postMessage を送る関数
-        function sendToIframe() {
-          const iframe = document.querySelector('iframe');
-          const trackingData = getQueryParams();
-          //iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
-          iframe.contentWindow.postMessage(trackingData, '*');
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+          const iframe = document.getElementById("child-iframe");
 
-        // ページ読み込み後、自動で送信
-        window.addEventListener('DOMContentLoaded', sendToIframe);
+          iframe.onload = () => {
+            const trackingData = getQueryParams();
+            console.log("送信内容：", trackingData);
+            iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
+          };
+        });
       </script>
     </div>
   </body>

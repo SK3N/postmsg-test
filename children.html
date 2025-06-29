@@ -27,11 +27,20 @@
 
     <script>
       window.addEventListener('message', function (event) {
-        if (event.origin !== "https://sk3n.github.io") return; // origin チェック
+        console.log("受信：", event.origin, event.data);
+
+        // 必要に応じて origin チェック
+        // if (event.origin !== "https://sk3n.github.io") return;
 
         const data = event.data;
         const input = document.getElementById("tracking");
-        input.value = JSON.stringify(data);
+
+        // 任意のキーの値（ここでは gad_source）を優先表示
+        if (data.gad_source) {
+          input.value = data.gad_source;
+        } else {
+          input.value = "受信データ: " + JSON.stringify(data);
+        }
       });
     </script>
   </body>
