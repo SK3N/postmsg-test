@@ -33,7 +33,8 @@
         function sendToIframe() {
           const iframe = document.querySelector('iframe');
           const trackingData = getQueryParams();
-          iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
+          //iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
+          iframe.contentWindow.postMessage(trackingData, '*');
         }
 
         // ページ読み込み後、自動で送信
