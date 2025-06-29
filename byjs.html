@@ -19,23 +19,19 @@
       <div id="form-container">読み込み中...</div>
 
       <script>
-        // ① クエリパラメータ取得
         const params = new URLSearchParams(window.location.search);
-        const gclid = params.get('gclid');
+        const gclid = params.get('gad_campaignid'); // パラメータ名に注意！
 
-        // ② HTMLファイルを読み込んで挿入
         fetch('children.html')
           .then(res => res.text())
           .then(html => {
             document.getElementById('form-container').innerHTML = html;
 
-            // ③ フォームがDOMに追加された後に値を代入
-            setTimeout(() => {
-              const input = document.querySelector('[name="gclid"]');
-              if (input && gclid) {
-                input.value = gclid;
-              }
-            }, 100); // 必要に応じて調整
+            // HTML挿入後に代入（delayなくてもOKなはず）
+            const input = document.querySelector('[name="gclid"]');
+            if (input && gclid) {
+              input.value = gclid;
+            }
           });
       </script>
     </div>

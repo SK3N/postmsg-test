@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+  <head>
+    <meta charset="UTF-8" />
+    <title>Child - JS埋め込み用</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Child Frame</h2>
+    <p>ここは iframe ではなく、JSで読み込まれるテンプレートです</p>
+
+    <form>
+      <label for="gclid">GCLID:</label>
+      <input type="text" name="gclid" placeholder="自動入力されます">
+    </form>
+
+    <!-- JSは必要ありません（byjs.html 側で処理） -->
+  </body>
+
+</html>
