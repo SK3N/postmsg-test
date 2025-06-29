@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+  <head>
+    <meta charset="UTF-8" />
+    <title>Child - postMessageテスト</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Child Frame</h1>
+    <p>ここは iframe 内です</p>
+
+    <label for="tracking">トラッキングコード：</label>
+    <input type="text" id="tracking" name="tracking" placeholder="未入力" />
+
+    <script>
+      window.addEventListener('message', function (event) {
+        // origin制限（セキュリティ強化）:
+        if (event.origin !== "https://sk3n.github.io") {
+          console.warn("許可されていない origin からのメッセージです:", event.origin);
+          return;
+        }
+
+        // 受信データの内容を確認
+        const data = event.data;
+        console.log("受信したデータ:", data);
+
+        // 例: トラッキングコードを input に反映
+        if (data.trackingCode) {
+          const input = document.getElementById("tracking");
+          if (input) input.value = data.trackingCode;
+        }
+      });
+    </script>
+  </body>
+
+</html>
