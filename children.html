@@ -45,7 +45,11 @@
           input.value = "gad_source: " + data.gad_source;
         } else if (data.gad_campaignid) {
           input.value = "gad_campaignid: " + data.gad_campaignid;
+        } else if (Object.keys(data).length === 0) {
+          // データが完全に空の場合
+          input.value = "不明（パラメータもリファラもなし）";
         } else {
+          // その他のデータがあった場合
           input.value = "受信データ: " + JSON.stringify(data);
         }
       });
