@@ -16,7 +16,7 @@
     <div class="parent">
       <h1>親ページ</h1>
 
-      <iframe id="child-iframe" src="https://shaftkk.net/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe>
+      <iframe id="child-iframe" src="https://potsmsg-test.netlify.app/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe>
 
       <script>
         function getQueryParams() {
@@ -35,18 +35,19 @@
           return params;
         }
 
-        // ページ読み込み完了後にiframeへpostMessage送信
+
         window.addEventListener('load', () => {
           const iframe = document.getElementById("child-iframe");
-
           if (!iframe) return;
 
-          // すでに読み込み済みでも onload が発火しないことがあるため、setTimeoutで念のため遅延も可
-          iframe.onload = () => {
-            const trackingData = getQueryParams();
-            console.log("送信内容：", trackingData);
+          const trackingData = getQueryParams();
+          console.log("送信内容：", trackingData);
+
+          // onload ではなく確実に送信
+          setTimeout(() => {
             iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
-          };
+            //iframe.contentWindow.postMessage(trackingData, '*');
+          }, 300);
         });
       </script>
     </div>

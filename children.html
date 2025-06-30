@@ -35,9 +35,16 @@
         const data = event.data;
         const input = document.getElementById("tracking");
 
-        // 任意のキーの値（ここでは gad_source）を優先表示
-        if (data.gad_source) {
-          input.value = data.gad_source;
+        if (data.organic_source) {
+          input.value = "オーガニック検索: " + data.organic_source;
+        } else if (data.gclid) {
+          input.value = "gclid: " + data.gclid;
+        } else if (data.gbraid) {
+          input.value = "gbraid: " + data.gbraid;
+        } else if (data.gad_source) {
+          input.value = "gad_source: " + data.gad_source;
+        } else if (data.gad_campaignid) {
+          input.value = "gad_campaignid: " + data.gad_campaignid;
         } else {
           input.value = "受信データ: " + JSON.stringify(data);
         }
