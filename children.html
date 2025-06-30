@@ -30,21 +30,15 @@
         console.log("受信：", event.origin, event.data);
 
         // 必要に応じて origin チェック
-        //if (event.origin !== "https://sk3n.github.io") return;
+        // if (event.origin !== "https://sk3n.github.io") return;
 
         const data = event.data;
         const input = document.getElementById("tracking");
 
         if (data.organic_source) {
           input.value = "オーガニック検索: " + data.organic_source;
-        } else if (data.gclid) {
-          input.value = "gclid: " + data.gclid;
-        } else if (data.gbraid) {
-          input.value = "gbraid: " + data.gbraid;
         } else if (data.gad_source) {
-          input.value = "gad_source: " + data.gad_source;
-        } else if (data.gad_campaignid) {
-          input.value = "gad_campaignid: " + data.gad_campaignid;
+          input.value = data.gad_source;
         } else {
           input.value = "受信データ: " + JSON.stringify(data);
         }
