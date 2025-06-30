@@ -26,6 +26,11 @@
           for (const [key, value] of searchParams.entries()) {
             params[key] = value;
           }
+          // オーガニック検索の判定を追加
+          const ref = document.referrer;
+          if (ref.includes("google.") || ref.includes("search.yahoo.")) {
+            params['organic_source'] = ref;
+          }
           return params;
         }
 
