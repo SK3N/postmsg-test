@@ -19,36 +19,103 @@
       <iframe id="child-iframe" src="https://potsmsg-test.netlify.app/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe>
 
       <script>
-        function getQueryParams() {
-          const params = {};
-          const searchParams = new URLSearchParams(window.location.search);
-          for (const [key, value] of searchParams.entries()) {
-            params[key] = value;
+        (function () {
+          // 共通で使う：クエリとリファラ情報を取得
+          function getTrackingData() {
+            const params = {};
+            const searchParams = new URLSearchParams(window.location.search);
+            for (const [key, value] of searchParams.entries()) {
+              params[key] = value;
+            }
+
+            const ref = document.referrer;
+            if (ref && (ref.includes("google.") || ref.includes("search.yahoo."))) {
+              params["organic_source"] = ref;
+            } else if (ref) {
+              params["referrer"] = ref;
+            }
+
+            return params;
           }
 
-          // オーガニック検索判定（referrerベース）
-          const ref = document.referrer;
-          if (ref.includes("google.") || ref.includes("search.yahoo.")) {
-            params['organic_source'] = ref;
-          }
+          // 受信時の動作（子ページ側）
+          window.addEventListener("message", function (event) {
+            console.log("受信：", event.origin, event.data);
 
-          return params;
-        }
+            // オリジン制限（必要なら適宜変更）
+            const allowedOrigins = ["https://sk3n.github.io", "https://shaftkk.net"];
+            if (!allowedOrigins.includes(event.origin)) return;
 
+            const data = event.data;
 
-        window.addEventListener('load', () => {
-          const iframe = document.getElementById("child-iframe");
-          if (!iframe) return;
+            // 1. id="tracking" の input に反映（iframeの可視フィールド）
+            const input = document.getElementById("tracking");
+            if (input) {
+              if (data.organic_source) {
+                input.value = "オーガニック検索: " + data.organic_source;
+              } else {
+                input.value = Object.entries(data).length
+                  ? "受信データ: " + JSON.stringify(data)
+                  : "不明";
+              }
+            }
 
-          const trackingData = getQueryParams();
-          console.log("送信内容：", trackingData);
+            // 2. name="tracking_code" の hidden フィールドに反映（共通）
+            const hidden = document.querySelector('input[name="tracking_code"]');
+            if (hidden) {
+              if (data.organic_source) {
+                hidden.value = "オーガニック検索: " + data.organic_source;
+              } else if (data.gclid) {
+                hidden.value = "gclid: " + data.gclid;
+              } else if (data.gbraid) {
+                hidden.value = "gbraid: " + data.gbraid;
+              } else if (data.gad_source) {
+                hidden.value = "gad_source: " + data.gad_source;
+              } else if (data.gad_campaignid) {
+                hidden.value = "gad_campaignid: " + data.gad_campaignid;
+              } else if (Object.keys(data).length > 0) {
+                hidden.value = JSON.stringify(data);
+              } else {
+                hidden.value = "不明";
+              }
+            }
+          });
 
-          // onload ではなく確実に送信
-          setTimeout(() => {
-            iframe.contentWindow.postMessage(trackingData, 'https://potsmsg-test.netlify.app');
-            //iframe.contentWindow.postMessage(trackingData, '*');
-          }, 300);
-        });
+          // 送信側（親ページ）の postMessage
+          window.addEventListener("load", function () {
+            const iframe = document.getElementById("child-iframe");
+            if (iframe && iframe.contentWindow) {
+              const data = getTrackingData();
+              console.log("送信内容：", data);
+              setTimeout(() => {
+                iframe.contentWindow.postMessage(data, "*"); // 安全のため "*" → 必要なら限定
+              }, 300);
+            }
+          });
+
+          // 直フォーム or hidden送信用：window.onload 時に name="tracking_code" に代入
+          window.addEventListener("load", function () {
+            const data = getTrackingData();
+            const hidden = document.querySelector('input[name="tracking_code"]');
+            if (hidden) {
+              if (data.organic_source) {
+                hidden.value = "オーガニック検索: " + data.organic_source;
+              } else if (data.gclid) {
+                hidden.value = "gclid: " + data.gclid;
+              } else if (data.gbraid) {
+                hidden.value = "gbraid: " + data.gbraid;
+              } else if (data.gad_source) {
+                hidden.value = "gad_source: " + data.gad_source;
+              } else if (data.gad_campaignid) {
+                hidden.value = "gad_campaignid: " + data.gad_campaignid;
+              } else if (Object.keys(data).length > 0) {
+                hidden.value = JSON.stringify(data);
+              } else {
+                hidden.value = "不明";
+              }
+            }
+          });
+        })();
       </script>
     </div>
   </body>
