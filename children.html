@@ -30,18 +30,18 @@
         console.log("受信：", event.origin, event.data);
 
         // 必要に応じて origin チェック
-        // if (event.origin !== "https://sk3n.github.io") return;
+        if (event.origin !== "https://sk3n.github.io") return;
 
         const data = event.data;
         const input = document.getElementById("tracking");
 
-        // 任意のキーの値（ここでは gad_source）を優先表示
-        /*if (data.gad_source) {
+        if (data.organic_source) {
+          input.value = "オーガニック検索: " + data.organic_source;
+        } else if (data.gad_source) {
           input.value = data.gad_source;
         } else {
           input.value = "受信データ: " + JSON.stringify(data);
-        }*/
-        input.value = "受信データ: " + JSON.stringify(data);
+        }
       });
     </script>
   </body>
