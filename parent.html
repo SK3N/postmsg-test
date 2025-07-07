@@ -26,23 +26,18 @@
         (function () {
           /** ▼設定項目：環境に合わせて編集してください ▼ **/
 
-          // 1. 許可する iframe 子ページのオリジン（セキュリティ対策で厳密に）
           const TRUSTED_ORIGINS = [
-            "https://info.valtes.co.jp",        // Pardot子ページ
-            "https://your-child-domain.com",   // 必要なら追加
+            "https://info.valtes.co.jp",
+            "https://your-child-domain.com",
             "https://potsmsg-test.netlify.app",
             "https://shaftkk.net"
           ];
 
-          // 2. postMessage の送信先オリジン（子ページのURLに合わせる）
           const CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
-
-          // 3. Pardotで作成したトラッキング用フィールドの name 属性
           const TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
 
           /** ▲ここまで設定変更 ▲ **/
 
-          // クエリパラメータ + リファラを取得
           function getTrackingData() {
             const data = {};
             const params = new URLSearchParams(window.location.search);
@@ -58,29 +53,26 @@
             return data;
           }
 
-          // 子ページからの postMessage を受信（子ページ内に hidden がある場合のみ有効）
           window.addEventListener('message', function (event) {
             if (!TRUSTED_ORIGINS.includes(event.origin)) return;
-
             const data = event.data;
+
             const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
             if (hidden) {
               hidden.value =
-                data.organic_source ? "organic: " + data.organic_source :
-                  data.referrer ? "referrer: " + data.referrer :
-                    data.gclid ? "gclid: " + data.gclid :
-                      data.gbraid ? "gbraid: " + data.gbraid :
-                        data.gad_source ? "gad_source: " + data.gad_source :
-                          data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                data.gclid ? "gclid: " + data.gclid :
+                  data.gbraid ? "gbraid: " + data.gbraid :
+                    data.gad_source ? "gad_source: " + data.gad_source :
+                      data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                        data.organic_source ? "organic: " + data.organic_source :
+                          data.referrer ? "referrer: " + data.referrer :
                             "raw: " + JSON.stringify(data);
             }
           });
 
-          // 親 → 子ページに postMessage 送信
           window.addEventListener('DOMContentLoaded', function () {
             const data = getTrackingData();
             const iframe = document.getElementById("child-iframe");
-
             if (!iframe || !iframe.contentWindow) return;
 
             const sendMessage = () => {
@@ -92,8 +84,6 @@
             };
 
             iframe.onload = sendMessage;
-
-            // 念のため遅延でもう一度送信（読み込み遅延対策）
             setTimeout(sendMessage, 800);
           });
         })();

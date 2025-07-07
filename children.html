@@ -75,12 +75,12 @@
           const input = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
           if (input) {
             input.value =
-              data.organic_source ? "organic: " + data.organic_source :
-                data.referrer ? "referrer: " + data.referrer :
-                  data.gclid ? "gclid: " + data.gclid :
-                    data.gbraid ? "gbraid: " + data.gbraid :
-                      data.gad_source ? "gad_source: " + data.gad_source :
-                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+              data.gclid ? "gclid: " + data.gclid :
+                data.gbraid ? "gbraid: " + data.gbraid :
+                  data.gad_source ? "gad_source: " + data.gad_source :
+                    data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                      data.organic_source ? "organic: " + data.organic_source :
+                        data.referrer ? "referrer: " + data.referrer :
                           "raw: " + JSON.stringify(data);
           }
         });
@@ -92,12 +92,12 @@
 
           const data = getTrackingData();
           input.value =
-            data.organic_source ? "organic: " + data.organic_source :
-              data.referrer ? "referrer: " + data.referrer :
-                data.gclid ? "gclid: " + data.gclid :
-                  data.gbraid ? "gbraid: " + data.gbraid :
-                    data.gad_source ? "gad_source: " + data.gad_source :
-                      data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+            data.gclid ? "gclid: " + data.gclid :
+              data.gbraid ? "gbraid: " + data.gbraid :
+                data.gad_source ? "gad_source: " + data.gad_source :
+                  data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                    data.organic_source ? "organic: " + data.organic_source :
+                      data.referrer ? "referrer: " + data.referrer :
                         "raw: " + JSON.stringify(data);
         });
       })();
