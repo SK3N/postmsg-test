@@ -20,7 +20,7 @@
 
       <script>
         (function () {
-          // URLパラメータ＋リファラ情報の取得
+          // クエリパラメータ + リファラ取得
           function getTrackingData() {
             const data = {};
             const params = new URLSearchParams(window.location.search);
@@ -36,13 +36,12 @@
             return data;
           }
 
-          // iframe内 子ページが message を受信したときの処理
+          // iframe子ページ: メッセージ受信処理
           window.addEventListener('message', function (event) {
+            // 本番ではoriginを厳密に
             if (event.origin !== "https://sk3n.github.io" && event.origin !== "https://shaftkk.net") return;
-
             const data = event.data;
 
-            // 表示用の input（id="tracking"）に代入
             const input = document.getElementById("tracking");
             if (input) {
               input.value =
@@ -55,7 +54,6 @@
                             "受信データ: " + JSON.stringify(data);
             }
 
-            // hidden input[name="tracking_code"] にも代入（あれば）
             const hidden = document.querySelector('input[type="hidden"][name="tracking_code"]');
             if (hidden) {
               hidden.value =
@@ -69,23 +67,34 @@
             }
           });
 
-          // 親ページ → iframeへ postMessage 送信
           window.addEventListener('DOMContentLoaded', function () {
-            const iframe = document.getElementById("child-iframe");
             const data = getTrackingData();
 
+            // iframe → 子ページにpostMessage送信
+            const iframe = document.getElementById("child-iframe");
             if (iframe) {
-              // iframeが読み込まれたら送信
               iframe.onload = () => {
-                iframe.contentWindow.postMessage(data, "https://sk3n.github.io");
+                iframe.contentWindow.postMessage(data, '*');
               };
-
-              // onload が発火しないケースに備えて遅延送信も実行
+              // 念のため遅延補完も
               setTimeout(() => {
                 if (iframe.contentWindow) {
-                  iframe.contentWindow.postMessage(data, "https://sk3n.github.io");
+                  iframe.contentWindow.postMessage(data, '*');
                 }
               }, 800);
+            }
+
+            // iframeでない場合でも hidden要素があれば入力
+            const hidden = document.querySelector('input[type="hidden"][name="tracking_code"]');
+            if (hidden) {
+              hidden.value =
+                data.organic_source ? "organic: " + data.organic_source :
+                  data.referrer ? "referrer: " + data.referrer :
+                    data.gclid ? "gclid: " + data.gclid :
+                      data.gbraid ? "gbraid: " + data.gbraid :
+                        data.gad_source ? "gad_source: " + data.gad_source :
+                          data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                            "raw: " + JSON.stringify(data);
             }
           });
         })();

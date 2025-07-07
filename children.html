@@ -27,72 +27,95 @@
 
     <script>
       (function () {
-        // URLパラメータ＋リファラ情報の取得
+        // クエリパラメータ + リファラをまとめて取得
         function getTrackingData() {
           const data = {};
-          const params = new URLSearchParams(window.location.search);
-          for (const [key, value] of params.entries()) {
+          const urlParams = new URLSearchParams(window.location.search);
+          for (const [key, value] of urlParams.entries()) {
             data[key] = value;
           }
+
           const ref = document.referrer;
           if (ref.includes("google.") || ref.includes("search.yahoo.")) {
-            data.organic_source = ref;
+            data['organic_source'] = ref;
           } else if (ref) {
-            data.referrer = ref;
+            data['referrer'] = ref;
           }
+
           return data;
         }
 
-        // iframe内 子ページが message を受信したときの処理
+        // iframe 子ページ（message受信）
         window.addEventListener('message', function (event) {
-          if (event.origin !== "https://sk3n.github.io" && event.origin !== "https://shaftkk.net") return;
+          // 必要に応じてオリジンチェック
+          if (!event.origin.includes('sk3n.github.io') && !event.origin.includes('shaftkk.net')) return;
 
           const data = event.data;
-
-          // 表示用の input（id="tracking"）に代入
           const input = document.getElementById("tracking");
+
           if (input) {
-            input.value =
-              data.organic_source ? "オーガニック検索: " + data.organic_source :
-                data.referrer ? "参照元: " + data.referrer :
-                  data.gclid ? "gclid: " + data.gclid :
-                    data.gbraid ? "gbraid: " + data.gbraid :
-                      data.gad_source ? "gad_source: " + data.gad_source :
-                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                          "受信データ: " + JSON.stringify(data);
+            // iframe子ページ用
+            if (data.organic_source) {
+              input.value = "オーガニック検索: " + data.organic_source;
+            } else if (data.referrer) {
+              input.value = "参照元: " + data.referrer;
+            } else if (data.gclid || data.gbraid || data.gad_source || data.gad_campaignid) {
+              input.value =
+                data.gclid ? "gclid: " + data.gclid :
+                  data.gbraid ? "gbraid: " + data.gbraid :
+                    data.gad_source ? "gad_source: " + data.gad_source :
+                      "gad_campaignid: " + data.gad_campaignid;
+            } else {
+              input.value = "受信データ: " + JSON.stringify(data);
+            }
           }
 
-          // hidden input[name="tracking_code"] にも代入（あれば）
+          // hidden input がある場合も対応（共通名: tracking_code）
           const hidden = document.querySelector('input[type="hidden"][name="tracking_code"]');
           if (hidden) {
-            hidden.value =
-              data.organic_source ? "organic: " + data.organic_source :
-                data.referrer ? "referrer: " + data.referrer :
-                  data.gclid ? "gclid: " + data.gclid :
-                    data.gbraid ? "gbraid: " + data.gbraid :
-                      data.gad_source ? "gad_source: " + data.gad_source :
-                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                          "raw: " + JSON.stringify(data);
+            if (data.organic_source) {
+              hidden.value = "organic: " + data.organic_source;
+            } else if (data.referrer) {
+              hidden.value = "referrer: " + data.referrer;
+            } else if (data.gclid || data.gbraid || data.gad_source || data.gad_campaignid) {
+              hidden.value =
+                data.gclid ? "gclid: " + data.gclid :
+                  data.gbraid ? "gbraid: " + data.gbraid :
+                    data.gad_source ? "gad_source: " + data.gad_source :
+                      "gad_campaignid: " + data.gad_campaignid;
+            } else {
+              hidden.value = "raw: " + JSON.stringify(data);
+            }
           }
         });
 
-        // 親ページ → iframeへ postMessage 送信
+        // iframe親ページ → 子ページへ postMessage
         window.addEventListener('DOMContentLoaded', function () {
           const iframe = document.getElementById("child-iframe");
-          const data = getTrackingData();
-
-          if (iframe) {
-            // iframeが読み込まれたら送信
-            iframe.onload = () => {
-              iframe.contentWindow.postMessage(data, "https://sk3n.github.io");
-            };
-
-            // onload が発火しないケースに備えて遅延送信も実行
+          if (iframe && iframe.contentWindow) {
+            const data = getTrackingData();
             setTimeout(() => {
-              if (iframe.contentWindow) {
-                iframe.contentWindow.postMessage(data, "https://sk3n.github.io");
-              }
-            }, 800);
+              iframe.contentWindow.postMessage(data, '*');
+            }, 100); // onload対策
+          }
+
+          // iframe でない場合でも、tracking_code hiddenがあれば代入
+          const hidden = document.querySelector('input[type="hidden"][name="tracking_code"]');
+          if (hidden) {
+            const data = getTrackingData();
+            if (data.organic_source) {
+              hidden.value = "organic: " + data.organic_source;
+            } else if (data.referrer) {
+              hidden.value = "referrer: " + data.referrer;
+            } else if (data.gclid || data.gbraid || data.gad_source || data.gad_campaignid) {
+              hidden.value =
+                data.gclid ? "gclid: " + data.gclid :
+                  data.gbraid ? "gbraid: " + data.gbraid :
+                    data.gad_source ? "gad_source: " + data.gad_source :
+                      "gad_campaignid: " + data.gad_campaignid;
+            } else {
+              hidden.value = "raw: " + JSON.stringify(data);
+            }
           }
         });
       })();
