@@ -23,10 +23,25 @@
     <p>ここは iframe 内です</p>
 
     <label for="tracking">トラッキングコード：</label>
-    <input type="text" id="tracking" name="tracking" placeholder="未入力" />
+    <input type="text" name="1031841_145641pi_1031841_145641" id="1031841_145641pi_1031841_145641" value="" class="text" size="30" maxlength="255" onchange="" onfocus="">
 
     <script>
       (function () {
+        /** ▼設定項目：環境に合わせて編集してください ▼ **/
+
+        // 1. 親ページのオリジン（https://〜で始まるドメイン）※厳密に指定
+        const TRUSTED_ORIGINS = [
+          "https://your-parent-domain.com",  // ← 本番用など必要に応じて追加
+          "https://sk3n.github.io",          // ← テスト用
+          "https://shaftkk.net"              // ← テスト用
+        ];
+
+        // 2. Pardotで作成した「トラッキング項目」の name 属性（例：自動生成されるもの）
+        const TRACKING_FIELD_NAME = "1031841_145641pi_1031841_145641";
+
+        /** ▲ここまで設定変更 ▲ **/
+
+        // クエリパラメータ + リファラ取得
         function getTrackingData() {
           const data = {};
           const params = new URLSearchParams(window.location.search);
@@ -42,15 +57,11 @@
           return data;
         }
 
-        // 共通：メッセージ受信（子ページ側）
+        // iframe 子ページ：postMessageを受け取る処理
         window.addEventListener('message', function (event) {
-          // オリジン厳密チェック（必要に応じて調整）
-          const allowedOrigins = ["https://sk3n.github.io", "https://shaftkk.net"];
-          if (!allowedOrigins.includes(event.origin)) return;
+          if (!TRUSTED_ORIGINS.includes(event.origin)) return;
 
           const data = event.data;
-
-          // input[type=text]（id="tracking"）があれば代入
           const input = document.getElementById("tracking");
           if (input) {
             input.value =
@@ -63,8 +74,7 @@
                           "受信データ: " + JSON.stringify(data);
           }
 
-          // hidden[name=tracking_code] にも代入
-          const hidden = document.querySelector('input[type="hidden"][name="tracking_code"]');
+          const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
           if (hidden) {
             hidden.value =
               data.organic_source ? "organic: " + data.organic_source :
@@ -77,22 +87,24 @@
           }
         });
 
-        // 共通：DOMContentLoadedで postMessage 実行（親ページ側）
+        // DOM構築後：親→子へ postMessage送信 + hiddenへの直接代入（非iframe時）
         window.addEventListener('DOMContentLoaded', function () {
           const data = getTrackingData();
+
+          // iframeがあれば送信
           const iframe = document.getElementById("child-iframe");
           if (iframe && iframe.contentWindow) {
             iframe.onload = () => {
-              iframe.contentWindow.postMessage(data, "*");
+              iframe.contentWindow.postMessage(data, '*');
             };
-            // 念のための再送（遅延）
+            // 念のため遅延でもう一度送信
             setTimeout(() => {
-              iframe.contentWindow.postMessage(data, "*");
+              iframe.contentWindow.postMessage(data, '*');
             }, 800);
           }
 
-          // 子iframeでない場合にも hidden[name=tracking_code] があれば代入
-          const hidden = document.querySelector('input[type="hidden"][name="tracking_code"]');
+          // iframeでない場合も hidden フィールドに代入
+          const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
           if (hidden) {
             hidden.value =
               data.organic_source ? "organic: " + data.organic_source :
