@@ -16,21 +16,21 @@
     <div class="parent">
       <h1>親ページ</h1>
 
-      <!-- ▼ 子ページ（Pardotフォームなど）iframeを1つだけ -->
-      <iframe id="child-iframe" src="https://info.valtes.co.jp/l/1031841/2025-07-01/3145j" width="100%" height="900" type="text/html" frameborder="0" allowTransparency="true" style="border: 0"></iframe>
-
+      <!-- iframe埋め込み -->
+      <iframe id="child-iframe" src="https://info.valtes.co.jp/l/1031841/2025-07-01/3145j" width="100%" height="600" frameborder="0" allowtransparency="true" style="border: 0;"></iframe>
 
       <script>
         (function () {
+          /** ▼設定エリア ▼ **/
           const TRUSTED_ORIGINS = [
-            "https://info.valtes.co.jp",
-            "https://your-child-domain.com",
-            "https://potsmsg-test.netlify.app",
-            "https://shaftkk.net"
+            "https://info.valtes.co.jp", // Pardot子ページ
+            "https://shaftkk.net",
+            "https://sk3n.github.io"
           ];
-
           const CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
           const TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
+          const enableHeightAdjust = true;
+          /** ▲設定ここまで ▲ **/
 
           function getTrackingData() {
             const data = {};
@@ -47,46 +47,62 @@
             return data;
           }
 
+          function isTrackingData(data) {
+            return data.gclid || data.gbraid || data.gad_source || data.gad_campaignid || data.organic_source || data.referrer;
+          }
+
+          function isHeightAdjustMessage(data) {
+            return data && typeof data === 'object' && 'slug' in data && 'height' in data;
+          }
+
           window.addEventListener('message', function (event) {
             if (!TRUSTED_ORIGINS.includes(event.origin)) return;
+
             const data = event.data;
 
-            // Pardotの高さ通知メッセージを無視
-            if (data && typeof data === 'object' && 'slug' in data && 'height' in data) return;
+            // ▼ 高さ調整処理（任意）
+            if (enableHeightAdjust && isHeightAdjustMessage(data)) {
+              const iframe = document.getElementById(data.slug);
+              if (iframe) {
+                iframe.style.height = `${data.height}px`;
+              }
+              return;
+            }
 
-            const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
-            if (hidden) {
-              hidden.value =
-                data.gclid ? "gclid: " + data.gclid :
-                  data.gbraid ? "gbraid: " + data.gbraid :
-                    data.gad_source ? "gad_source: " + data.gad_source :
-                      data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                        data.organic_source ? "organic: " + data.organic_source :
-                          data.referrer ? "referrer: " + data.referrer :
-                            "raw: " + JSON.stringify(data);
+            // ▼ トラッキング代入処理
+            if (isTrackingData(data)) {
+              const input = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
+              if (input) {
+                input.value =
+                  data.gclid ? "gclid: " + data.gclid :
+                    data.gbraid ? "gbraid: " + data.gbraid :
+                      data.gad_source ? "gad_source: " + data.gad_source :
+                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                          data.organic_source ? "organic: " + data.organic_source :
+                            data.referrer ? "referrer: " + data.referrer :
+                              "raw: " + JSON.stringify(data);
+              }
             }
           });
 
+          // 親→子へ postMessage（クエリ・リファラ情報）
           window.addEventListener('DOMContentLoaded', function () {
-            const data = getTrackingData();
             const iframe = document.getElementById("child-iframe");
             if (!iframe || !iframe.contentWindow) return;
+            const data = getTrackingData();
 
-            const sendMessage = () => {
+            const send = () => {
               try {
                 iframe.contentWindow.postMessage(data, CHILD_PAGE_ORIGIN);
               } catch (e) {
                 console.warn("postMessage failed:", e);
               }
             };
-
-            iframe.onload = sendMessage;
-            setTimeout(sendMessage, 800);
+            iframe.onload = send;
+            setTimeout(send, 800);
           });
         })();
       </script>
-
-
     </div>
   </body>
 
