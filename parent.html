@@ -21,58 +21,63 @@
 
       <script>
         (function () {
-          /** ▼設定エリア ▼ **/
+          /** ▼【1】子ページのオリジン（セキュリティのため厳密に） ▼ **/
           const TRUSTED_ORIGINS = [
-            "https://info.valtes.co.jp", // Pardot子ページ
-            "https://shaftkk.net",
-            "https://sk3n.github.io"
+            "https://info.valtes.co.jp",        // Pardot子ページ
+            "https://potsmsg-test.netlify.app", // テスト用
+            "https://shaftkk.net"               // 任意で追加
           ];
-          const CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
-          const TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
-          const enableHeightAdjust = true;
-          /** ▲設定ここまで ▲ **/
 
-          // トラッキング情報取得
+          /** ▼【2】子ページのURLのオリジン（postMessageの送信先） ▼ **/
+          const CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
+
+          /** ▼【3】トラッキングフィールドの name属性（Pardotで自動生成される） ▼ **/
+          const TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
+
+          /** ▼【4】高さ調整を有効にするか（true/false） ▼ **/
+          const ENABLE_HEIGHT_ADJUST = true;
+
+          /** ▼クエリとリファラー取得（Tracking用） ▼ **/
           function getTrackingData() {
             const data = {};
             const params = new URLSearchParams(window.location.search);
             for (const [key, value] of params.entries()) {
               data[key] = value;
             }
+
             const ref = document.referrer;
             if (ref.includes("google.") || ref.includes("search.yahoo.")) {
               data.organic_source = ref;
             } else if (ref) {
               data.referrer = ref;
-            } else {
-              data.referrer = "direct_access"; // ← 追加で代入（任意）
             }
             return data;
           }
 
+          /** ▼トラッキング用データかどうかの判定 ▼ **/
           function isTrackingData(data) {
-            return data.gclid || data.gbraid || data.gad_source || data.gad_campaignid || data.organic_source || data.referrer;
+            return (
+              typeof data === "object" &&
+              (data.gclid || data.gbraid || data.gad_source || data.gad_campaignid || data.organic_source || data.referrer)
+            );
           }
 
+          /** ▼高さ調整メッセージかどうかの判定 ▼ **/
           function isHeightAdjustMessage(data) {
-            return data && typeof data === 'object' && 'slug' in data && 'height' in data;
+            return (
+              typeof data === "object" &&
+              "slug" in data &&
+              "height" in data
+            );
           }
 
+          /** ▼postMessage 受信処理（子 → 親） ▼ **/
           window.addEventListener('message', function (event) {
             if (!TRUSTED_ORIGINS.includes(event.origin)) return;
 
             const data = event.data;
 
-            // ▼ 高さ調整処理（任意）
-            if (enableHeightAdjust && isHeightAdjustMessage(data)) {
-              const iframe = document.getElementById(data.slug);
-              if (iframe) {
-                iframe.style.height = `${data.height}px`;
-              }
-              return;
-            }
-
-            // ▼ トラッキング代入処理
+            // ▼① トラッキング情報の代入
             if (isTrackingData(data)) {
               const input = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
               if (input) {
@@ -86,21 +91,32 @@
                               "raw: " + JSON.stringify(data);
               }
             }
+
+            // ▼② 高さ調整の受信（有効時のみ）
+            if (ENABLE_HEIGHT_ADJUST && isHeightAdjustMessage(data)) {
+              const iframe = document.getElementById(data.slug);
+              if (iframe) {
+                iframe.style.height = `${data.height}px`;
+              }
+            }
           });
 
-          // 親→子へ postMessage（クエリ・リファラ情報）
+          /** ▼初回送信（親 → 子） ▼ **/
           window.addEventListener('DOMContentLoaded', function () {
             const iframe = document.getElementById("child-iframe");
             if (!iframe || !iframe.contentWindow) return;
-            const data = getTrackingData();
+
+            const trackingData = getTrackingData();
 
             const send = () => {
               try {
-                iframe.contentWindow.postMessage(data, CHILD_PAGE_ORIGIN);
+                iframe.contentWindow.postMessage(trackingData, CHILD_PAGE_ORIGIN);
               } catch (e) {
                 console.warn("postMessage failed:", e);
               }
             };
+
+            // iframeロード時と、保険で800ms後にも送信
             iframe.onload = send;
             setTimeout(send, 800);
           });
