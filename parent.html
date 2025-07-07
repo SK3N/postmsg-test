@@ -89,7 +89,7 @@
               const data = getTrackingData();
               setTimeout(() => {
                 iframe.contentWindow.postMessage(data, '*');
-              }, 300); // onload対策
+              }, 500); // onload対策
             }
 
             // iframe でない場合でも、tracking_code hiddenがあれば代入
