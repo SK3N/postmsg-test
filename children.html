@@ -15,6 +15,12 @@
         padding: 0.5rem;
         margin-top: 1rem;
       }
+
+      .result {
+        margin-top: 0.5rem;
+        color: #333;
+        font-size: 0.9rem;
+      }
     </style>
   </head>
 
@@ -22,26 +28,21 @@
     <h1>Child Frame</h1>
     <p>ここは iframe 内です</p>
 
-    <label for="tracking">トラッキングコード：</label>
-    <input type="text" name="1031841_145641pi_1031841_145641" id="1031841_145641pi_1031841_145641" value="" class="text" size="30" maxlength="255" onchange="" onfocus="">
+    <label>トラッキングコード：</label>
+    <input type="text" name="1031841_145641pi_1031841_145641" id="1031841_145641pi_1031841_145641" class="text" size="30" maxlength="255">
+    <div class="result" id="tracking-result">（ここに値が表示されます）</div>
 
     <script>
       (function () {
         /** ▼設定項目：環境に合わせて編集してください ▼ **/
-
-        // 1. 親ページのオリジン（https://〜で始まるドメイン）※厳密に指定
         const TRUSTED_ORIGINS = [
-          "https://your-parent-domain.com",  // ← 本番用など必要に応じて追加
-          "https://sk3n.github.io",          // ← テスト用
-          "https://shaftkk.net"              // ← テスト用
+          "https://your-parent-domain.com",
+          "https://sk3n.github.io",
+          "https://shaftkk.net"
         ];
-
-        // 2. Pardotで作成した「トラッキング項目」の name 属性（例：自動生成されるもの）
         const TRACKING_FIELD_NAME = "1031841_145641pi_1031841_145641";
-
         /** ▲ここまで設定変更 ▲ **/
 
-        // クエリパラメータ + リファラ取得
         function getTrackingData() {
           const data = {};
           const params = new URLSearchParams(window.location.search);
@@ -57,64 +58,42 @@
           return data;
         }
 
-        // iframe 子ページ：postMessageを受け取る処理
+        function setTrackingValue(value) {
+          const input = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
+          if (input) input.value = value;
+          const result = document.getElementById("tracking-result");
+          if (result) result.textContent = value;
+        }
+
         window.addEventListener('message', function (event) {
           if (!TRUSTED_ORIGINS.includes(event.origin)) return;
 
           const data = event.data;
-          const input = document.getElementById("tracking");
-          if (input) {
-            input.value =
-              data.organic_source ? "オーガニック検索: " + data.organic_source :
-                data.referrer ? "参照元: " + data.referrer :
-                  data.gclid ? "gclid: " + data.gclid :
-                    data.gbraid ? "gbraid: " + data.gbraid :
-                      data.gad_source ? "gad_source: " + data.gad_source :
-                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                          "受信データ: " + JSON.stringify(data);
-          }
+          const value =
+            data.organic_source ? "organic: " + data.organic_source :
+              data.referrer ? "referrer: " + data.referrer :
+                data.gclid ? "gclid: " + data.gclid :
+                  data.gbraid ? "gbraid: " + data.gbraid :
+                    data.gad_source ? "gad_source: " + data.gad_source :
+                      data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                        "raw: " + JSON.stringify(data);
 
-          const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
-          if (hidden) {
-            hidden.value =
-              data.organic_source ? "organic: " + data.organic_source :
-                data.referrer ? "referrer: " + data.referrer :
-                  data.gclid ? "gclid: " + data.gclid :
-                    data.gbraid ? "gbraid: " + data.gbraid :
-                      data.gad_source ? "gad_source: " + data.gad_source :
-                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                          "raw: " + JSON.stringify(data);
-          }
+          setTrackingValue(value);
         });
 
-        // DOM構築後：親→子へ postMessage送信 + hiddenへの直接代入（非iframe時）
+        // iframeでない直接アクセス用にも対応
         window.addEventListener('DOMContentLoaded', function () {
           const data = getTrackingData();
+          const value =
+            data.organic_source ? "organic: " + data.organic_source :
+              data.referrer ? "referrer: " + data.referrer :
+                data.gclid ? "gclid: " + data.gclid :
+                  data.gbraid ? "gbraid: " + data.gbraid :
+                    data.gad_source ? "gad_source: " + data.gad_source :
+                      data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
+                        "";
 
-          // iframeがあれば送信
-          const iframe = document.getElementById("child-iframe");
-          if (iframe && iframe.contentWindow) {
-            iframe.onload = () => {
-              iframe.contentWindow.postMessage(data, '*');
-            };
-            // 念のため遅延でもう一度送信
-            setTimeout(() => {
-              iframe.contentWindow.postMessage(data, '*');
-            }, 800);
-          }
-
-          // iframeでない場合も hidden フィールドに代入
-          const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
-          if (hidden) {
-            hidden.value =
-              data.organic_source ? "organic: " + data.organic_source :
-                data.referrer ? "referrer: " + data.referrer :
-                  data.gclid ? "gclid: " + data.gclid :
-                    data.gbraid ? "gbraid: " + data.gbraid :
-                      data.gad_source ? "gad_source: " + data.gad_source :
-                        data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                          "raw: " + JSON.stringify(data);
-          }
+          if (value) setTrackingValue(value);
         });
       })();
     </script>

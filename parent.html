@@ -2,7 +2,7 @@
 <html lang="ja">
 
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>親ページ</title>
     <style>
       .parent {
@@ -16,25 +16,26 @@
     <div class="parent">
       <h1>親ページ</h1>
 
+      <!-- 子ページ（iframe埋め込み） -->
       <iframe id="child-iframe" src="https://potsmsg-test.netlify.app/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe>
 
       <script>
         (function () {
           /** ▼設定項目：環境に合わせて編集してください ▼ **/
 
-          // 1. 親ページのオリジン（https://〜で始まるドメイン）※厳密に指定
+          // 許可するiframe子ページのオリジン（セキュリティ対策で厳密に）
           const TRUSTED_ORIGINS = [
-            "https://your-parent-domain.com",  // ← 本番用など必要に応じて追加
-            "https://sk3n.github.io",          // ← テスト用
-            "https://shaftkk.net"              // ← テスト用
+            "https://your-child-domain.com", // ← 本番用に合わせて変更
+            "https://potsmsg-test.netlify.app",
+            "https://shaftkk.net"
           ];
 
-          // 2. Pardotで作成した「トラッキング項目」の name 属性（例：自動生成されるもの）
+          // Pardotで作成したトラッキング用フィールド名（※確認用）
           const TRACKING_FIELD_NAME = "1031841_145641pi_1031841_145641";
 
           /** ▲ここまで設定変更 ▲ **/
 
-          // クエリパラメータ + リファラ取得
+          // クエリパラメータとリファラ取得
           function getTrackingData() {
             const data = {};
             const params = new URLSearchParams(window.location.search);
@@ -50,23 +51,11 @@
             return data;
           }
 
-          // iframe 子ページ：postMessageを受け取る処理
+          // メッセージ受信処理（不要なら削除可）
           window.addEventListener('message', function (event) {
             if (!TRUSTED_ORIGINS.includes(event.origin)) return;
 
             const data = event.data;
-            const input = document.getElementById("tracking");
-            if (input) {
-              input.value =
-                data.organic_source ? "オーガニック検索: " + data.organic_source :
-                  data.referrer ? "参照元: " + data.referrer :
-                    data.gclid ? "gclid: " + data.gclid :
-                      data.gbraid ? "gbraid: " + data.gbraid :
-                        data.gad_source ? "gad_source: " + data.gad_source :
-                          data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                            "受信データ: " + JSON.stringify(data);
-            }
-
             const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
             if (hidden) {
               hidden.value =
@@ -80,34 +69,22 @@
             }
           });
 
-          // DOM構築後：親→子へ postMessage送信 + hiddenへの直接代入（非iframe時）
+          // iframeにpostMessage送信
           window.addEventListener('DOMContentLoaded', function () {
             const data = getTrackingData();
-
-            // iframeがあれば送信
             const iframe = document.getElementById("child-iframe");
-            if (iframe && iframe.contentWindow) {
-              iframe.onload = () => {
-                iframe.contentWindow.postMessage(data, '*');
-              };
-              // 念のため遅延でもう一度送信
-              setTimeout(() => {
-                iframe.contentWindow.postMessage(data, '*');
-              }, 800);
-            }
+            if (!iframe) return;
 
-            // iframeでない場合も hidden フィールドに代入
-            const hidden = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
-            if (hidden) {
-              hidden.value =
-                data.organic_source ? "organic: " + data.organic_source :
-                  data.referrer ? "referrer: " + data.referrer :
-                    data.gclid ? "gclid: " + data.gclid :
-                      data.gbraid ? "gbraid: " + data.gbraid :
-                        data.gad_source ? "gad_source: " + data.gad_source :
-                          data.gad_campaignid ? "gad_campaignid: " + data.gad_campaignid :
-                            "raw: " + JSON.stringify(data);
-            }
+            iframe.onload = () => {
+              iframe.contentWindow.postMessage(data, "*");
+            };
+
+            // 念のため遅延でもう一度送信
+            setTimeout(() => {
+              if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage(data, "*");
+              }
+            }, 800);
           });
         })();
       </script>
