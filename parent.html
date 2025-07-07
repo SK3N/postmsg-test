@@ -17,28 +17,32 @@
       <h1>親ページ</h1>
 
       <!-- 子ページ（iframe埋め込み） -->
-      <!--iframe id="child-iframe" src="https://potsmsg-test.netlify.app/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe-->
+      <iframe id="child-iframe" src="https://potsmsg-test.netlify.app/children.html" width="100%" height="600" style="border:1px solid #ccc;"></iframe>
 
+      <!-- 子ページ（iframe埋め込み） -->
       <iframe id="child-iframe" src="https://info.valtes.co.jp/l/1031841/2025-07-01/3145j" width="100%" height="600" type="text/html" frameborder="0" allowTransparency="true" style="border: 0"></iframe>
 
       <script>
         (function () {
           /** ▼設定項目：環境に合わせて編集してください ▼ **/
 
-          // 許可するiframe子ページのオリジン（セキュリティ対策で厳密に）
+          // 1. 許可する iframe 子ページのオリジン（セキュリティ対策で厳密に）
           const TRUSTED_ORIGINS = [
-            "https://info.valtes.co.jp" // ← pardotのiframe子ページのドメインを追加
-            "https://your-child-domain.com", // ← 本番用に合わせて変更
+            "https://info.valtes.co.jp",        // Pardot子ページ
+            "https://your-child-domain.com",   // 必要なら追加
             "https://potsmsg-test.netlify.app",
             "https://shaftkk.net"
           ];
 
-          // Pardotで作成したトラッキング用フィールド名（※確認用）
+          // 2. postMessage の送信先オリジン（子ページのURLに合わせる）
+          const CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
+
+          // 3. Pardotで作成したトラッキング用フィールドの name 属性
           const TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
 
           /** ▲ここまで設定変更 ▲ **/
 
-          // クエリパラメータとリファラ取得
+          // クエリパラメータ + リファラを取得
           function getTrackingData() {
             const data = {};
             const params = new URLSearchParams(window.location.search);
@@ -54,7 +58,7 @@
             return data;
           }
 
-          // メッセージ受信処理（不要なら削除可）
+          // 子ページからの postMessage を受信（子ページ内に hidden がある場合のみ有効）
           window.addEventListener('message', function (event) {
             if (!TRUSTED_ORIGINS.includes(event.origin)) return;
 
@@ -72,22 +76,25 @@
             }
           });
 
-          // iframeにpostMessage送信
+          // 親 → 子ページに postMessage 送信
           window.addEventListener('DOMContentLoaded', function () {
             const data = getTrackingData();
             const iframe = document.getElementById("child-iframe");
-            if (!iframe) return;
 
-            iframe.onload = () => {
-              iframe.contentWindow.postMessage(data, "*");
+            if (!iframe || !iframe.contentWindow) return;
+
+            const sendMessage = () => {
+              try {
+                iframe.contentWindow.postMessage(data, CHILD_PAGE_ORIGIN);
+              } catch (e) {
+                console.warn("postMessage failed:", e);
+              }
             };
 
-            // 念のため遅延でもう一度送信
-            setTimeout(() => {
-              if (iframe.contentWindow) {
-                iframe.contentWindow.postMessage(data, "*");
-              }
-            }, 800);
+            iframe.onload = sendMessage;
+
+            // 念のため遅延でもう一度送信（読み込み遅延対策）
+            setTimeout(sendMessage, 800);
           });
         })();
       </script>
