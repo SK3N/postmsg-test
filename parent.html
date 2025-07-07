@@ -50,6 +50,8 @@
               data.organic_source = ref;
             } else if (ref) {
               data.referrer = ref;
+            } else {
+              data.referrer = "direct_access"; // ← 追加で代入（任意）
             }
             return data;
           }
