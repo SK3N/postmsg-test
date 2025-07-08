@@ -4,6 +4,13 @@
   <head>
     <meta charset="UTF-8">
     <title>リファラー再現テストができるページ</title>
+    <script>
+      // ▼ セッションの最初にリファラを保存
+      if (!sessionStorage.getItem("initial_referrer")) {
+        const initialRef = document.referrer || "direct_access";
+        sessionStorage.setItem("initial_referrer", initialRef);
+      }
+    </script>
   </head>
 
   <body>

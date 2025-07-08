@@ -10,6 +10,13 @@
         margin: 2rem auto;
       }
     </style>
+    <script>
+      // ▼ セッションの最初にリファラを保存
+      if (!sessionStorage.getItem("initial_referrer")) {
+        const initialRef = document.referrer || "direct_access";
+        sessionStorage.setItem("initial_referrer", initialRef);
+      }
+    </script>
   </head>
 
   <body>
@@ -45,7 +52,8 @@
               data[key] = value;
             }
 
-            const ref = document.referrer;
+            const storedRef = sessionStorage.getItem("initial_referrer");
+            const ref = storedRef || document.referrer || "direct_access";
 
             if (ref.includes(location.hostname)) {
               data.internal_referrer = ref; // 先に同一ドメイン判定
