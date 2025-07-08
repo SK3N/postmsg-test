@@ -11,10 +11,10 @@
       }
     </style>
     <script>
-      // ▼ セッションの最初にリファラを保存
       if (!sessionStorage.getItem("initial_referrer")) {
-        const initialRef = document.referrer || "direct_access";
-        sessionStorage.setItem("initial_referrer", initialRef);
+        const ref = document.referrer;
+        const isExternal = ref && !ref.includes(location.hostname);
+        sessionStorage.setItem("initial_referrer", isExternal ? ref : "direct_access");
       }
     </script>
   </head>
