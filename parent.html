@@ -12,8 +12,8 @@
     </style>
     <script>
       if (!sessionStorage.getItem("initial_referrer")) {
-        const ref = document.referrer;
-        const isExternal = ref && !ref.includes(location.hostname);
+        var ref = document.referrer;
+        var isExternal = ref && ref.indexOf(location.hostname) === -1;
         sessionStorage.setItem("initial_referrer", isExternal ? ref : "direct_access");
       }
     </script>
@@ -29,35 +29,34 @@
       <script>
         (function () {
           /** ▼【1】子ページのオリジン（セキュリティのため厳密に） ▼ **/
-          const TRUSTED_ORIGINS = [
-            "https://info.valtes.co.jp",        // Pardot子ページ
-            "https://potsmsg-test.netlify.app", // テスト用
-            "https://shaftkk.net"               // 任意で追加
+          var TRUSTED_ORIGINS = [
+            "https://info.valtes.co.jp",
+            "https://potsmsg-test.netlify.app",
+            "https://shaftkk.net"
           ];
 
           /** ▼【2】子ページのURLのオリジン（postMessageの送信先） ▼ **/
-          const CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
+          var CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
 
           /** ▼【3】トラッキングフィールドの name属性（Pardotで自動生成される） ▼ **/
-          const TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
+          var TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
 
           /** ▼【4】高さ調整を有効にするか（true/false） ▼ **/
-          const ENABLE_HEIGHT_ADJUST = true;
+          var ENABLE_HEIGHT_ADJUST = true;
 
-          /** ▼クエリとリファラー取得（Tracking用） ▼ **/
           function getTrackingData() {
-            const data = {};
-            const params = new URLSearchParams(window.location.search);
-            for (const [key, value] of params.entries()) {
+            var data = {};
+            var params = new URLSearchParams(window.location.search);
+            params.forEach(function (value, key) {
               data[key] = value;
-            }
+            });
 
-            const storedRef = sessionStorage.getItem("initial_referrer");
-            const ref = storedRef || document.referrer || "direct_access";
+            var storedRef = sessionStorage.getItem("initial_referrer");
+            var ref = storedRef || document.referrer || "direct_access";
 
-            if (ref.includes(location.hostname)) {
-              data.internal_referrer = ref; // 先に同一ドメイン判定
-            } else if (ref.includes("google.") || ref.includes("search.yahoo.")) { // 検索エンジン判定
+            if (ref.indexOf(location.hostname) !== -1) {
+              data.internal_referrer = ref;
+            } else if (ref.indexOf("google.") !== -1 || ref.indexOf("search.yahoo.") !== -1) {
               data.organic_source = ref;
             } else if (ref) {
               data.referrer = ref;
@@ -68,7 +67,6 @@
             return data;
           }
 
-          /** ▼トラッキング用データかどうかの判定 ▼ **/
           function isTrackingData(data) {
             return (
               typeof data === "object" &&
@@ -76,7 +74,6 @@
             );
           }
 
-          /** ▼高さ調整メッセージかどうかの判定 ▼ **/
           function isHeightAdjustMessage(data) {
             return (
               typeof data === "object" &&
@@ -85,15 +82,13 @@
             );
           }
 
-          /** ▼postMessage 受信処理（子 → 親） ▼ **/
           window.addEventListener('message', function (event) {
-            if (!TRUSTED_ORIGINS.includes(event.origin)) return;
+            if (TRUSTED_ORIGINS.indexOf(event.origin) === -1) return;
 
-            const data = event.data;
+            var data = event.data;
 
-            // ▼① トラッキング情報の代入
             if (isTrackingData(data)) {
-              const input = document.querySelector(`input[name="${TRACKING_FIELD_NAME}"]`);
+              var input = document.querySelector('input[name="' + TRACKING_FIELD_NAME + '"]');
               if (input) {
                 input.value =
                   data.gclid ? "gclid: " + data.gclid :
@@ -107,23 +102,21 @@
               }
             }
 
-            // ▼② 高さ調整の受信（有効時のみ）
             if (ENABLE_HEIGHT_ADJUST && isHeightAdjustMessage(data)) {
-              const iframe = document.getElementById(data.slug);
+              var iframe = document.getElementById(data.slug);
               if (iframe) {
-                iframe.style.height = `${data.height}px`;
+                iframe.style.height = data.height + "px";
               }
             }
           });
 
-          /** ▼初回送信（親 → 子） ▼ **/
           window.addEventListener('DOMContentLoaded', function () {
-            const iframe = document.getElementById("child-iframe");
+            var iframe = document.getElementById("child-iframe");
             if (!iframe || !iframe.contentWindow) return;
 
-            const trackingData = getTrackingData();
+            var trackingData = getTrackingData();
 
-            const send = () => {
+            var send = function () {
               try {
                 iframe.contentWindow.postMessage(trackingData, CHILD_PAGE_ORIGIN);
               } catch (e) {
@@ -131,7 +124,6 @@
               }
             };
 
-            // iframeロード時と、保険で800ms後にも送信
             iframe.onload = send;
             setTimeout(send, 800);
           });
