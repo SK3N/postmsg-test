@@ -28,20 +28,15 @@
 
       <script>
         (function () {
-          /** ▼【1】子ページのオリジン（セキュリティのため厳密に） ▼ **/
+          /** ▼【1】子ページの信頼できるオリジン一覧 ▼ **/
           var TRUSTED_ORIGINS = [
-            "https://info.valtes.co.jp",
-            "https://potsmsg-test.netlify.app",
-            "https://shaftkk.net"
+            "https://info.valtes.co.jp"
           ];
 
-          /** ▼【2】子ページのURLのオリジン（postMessageの送信先） ▼ **/
-          var CHILD_PAGE_ORIGIN = "https://info.valtes.co.jp";
-
-          /** ▼【3】トラッキングフィールドの name属性（Pardotで自動生成される） ▼ **/
+          /** ▼【2】トラッキングフィールドの name 属性 ▼ **/
           var TRACKING_FIELD_NAME = "1031841_164490pi_1031841_164490";
 
-          /** ▼【4】高さ調整を有効にするか（true/false） ▼ **/
+          /** ▼【3】高さ調整を有効にするか（true/false） ▼ **/
           var ENABLE_HEIGHT_ADJUST = true;
 
           function getTrackingData() {
@@ -113,6 +108,10 @@
           window.addEventListener('DOMContentLoaded', function () {
             var iframe = document.getElementById("child-iframe");
             if (!iframe || !iframe.contentWindow) return;
+
+            var a = document.createElement("a");
+            a.href = iframe.src;
+            var CHILD_PAGE_ORIGIN = a.origin;
 
             var trackingData = getTrackingData();
 
